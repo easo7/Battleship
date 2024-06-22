@@ -70,7 +70,7 @@ public class Main {
         String returnValue = "";
         boolean validNum =false;
 
-        System.out.println("            \\\\\\======\\*\\Welcome to Battleship!/*/======///");
+        System.out.println("                     \\\\\\======\\*\\Welcome to Battleship!/*/======///");
         do {
             //receive user Input for menu options
             System.out.println();
