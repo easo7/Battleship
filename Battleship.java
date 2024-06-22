@@ -6,6 +6,8 @@ public class Battleship {
     final static int BOARD_LENGTH = 10;
 
     static int difficulty;
+    static boolean hit = false;
+    static int hitX=0, hitY=0;
 
     public static void startGame(int gameStatus){
         //variable setup
@@ -14,6 +16,7 @@ public class Battleship {
         cpuBoard = new String[BOARD_LENGTH][BOARD_LENGTH];
         playerBoardShot = new String[BOARD_LENGTH][BOARD_LENGTH];
         cpuBoardShot = new String[BOARD_LENGTH][BOARD_LENGTH];
+
         int turn = 0;
         int numMoves, numMovesCPU, result;
         String choice ="";
@@ -53,11 +56,9 @@ public class Battleship {
             numMoves = loadExistingGamePlayer();
             numMovesCPU = loadExistingGameCPU();
             displayPlayerShots();
-            turn = 0;
         }
 
         while(gameRunning){
-            if(turn==0) {
                 //asks for user choice on what to do on his turn
                 System.out.println();
                 System.out.print("Would you like to take a Shot(1), Save the Game(2), or Surrender (3): ");
@@ -72,7 +73,6 @@ public class Battleship {
                     //take shot
                     result = takePlayerShot();
                     //informs user of result of shot
-                    displayPlayerShots();
                     System.out.println();
                     switch(result){
                         case 0:
@@ -82,14 +82,13 @@ public class Battleship {
                             System.out.println("Bang! You have hit a Target");
                             break;
                         case 2:
-                            System.out.println("BOOM! A Ship has been destroyed!");
+                            System.out.println("BOOM! The Ship has been destroyed!");
                             gameRunning = checkWin(1);
                             break;
                     }
                     System.out.println("Press Enter to Continue");
                     Input.stringInput();
-                    //switch to cpu turn
-                    turn =1;
+
                 }
                 else if(choice.equals("2")) {
                     //save game option
@@ -102,13 +101,14 @@ public class Battleship {
                     System.out.println("You have Lost! Here are the Statuses of the two Boards: ");
                     displayPlayerBoard();
                     displayCPUBoard();
+                    System.out.println("Press Enter to continue: ");
+                    Input.stringInput();
                     gameRunning = false;
                 }
-            }
 
-            if(gameRunning && turn==1) {
+
+            if(gameRunning) {
                 result = takeCpuShot(difficulty);
-                displayPlayerBoard();
                 //informs user of result of shot
                 switch(result){
                     case 0:
@@ -116,14 +116,12 @@ public class Battleship {
                         break;
                     case 1:
                         System.out.println("The Cpu has hit your ship! It is your Turn now");
-
                         break;
                     case 2:
                         System.out.println("KABOOM! Your Ship has been destroyed");
                         gameRunning = checkWin(0);
                         break;
                 }
-                turn=0;
             }
         }
     }
@@ -230,44 +228,84 @@ public class Battleship {
             if (cpuBoard[row][column].equals("-")) {
                 cpuBoard[row][column] = "O";
                 cpuBoardShot[row][column] = "O";
-               result = 0;
+                displayPlayerBoard();
+
+                result = 0;
             } else {
                 //when player hits a ship
                 ship = cpuBoard[row][column];
+                cpuBoard[row][column] = "X";
+                cpuBoardShot[row][column] = "X";
+                displayPlayerBoard();
+
                 //if player finishes a specific ship
                 if (!shipExists(ship,1)) {
+                    switch(ship){
+                        case"A":
+                            System.out.println("The Aircraft Carrier has been Struck Down");
+                            break;
+                        case"D":
+                            System.out.println("The Destroyer has been Struck Down");
+                            break;
+                        case"C":
+                            System.out.println("The Cruiser has been Struck Down");
+                            break;
+                        case"B":
+                            System.out.println("The Battleship has been Struck Down");
+                            break;
+                        case"S":
+                            System.out.println("The Submarine has been Struck Down");
+                            break;
+                    }
                     result = 2;
                 }
-                //if player hits but doesn't destory the ship
+                //if player hits but doesn't destroy the ship
                 else{
                     result = 1;
                 }
-                cpuBoard[row][column] = "X";
-                cpuBoardShot[row][column] = "X";
 
             }
         }
-        else{
+        else if (board==0){
             //if cpu misses its shot
             if (playerBoard[row][column].equals("-")) {
                 playerBoard[row][column] = "O";
                 playerBoardShot[row][column] = "O";
-
+                displayCPUBoard();
                 result = 0;
             } else {
                 //if cpu hits a ship
                 ship = playerBoard[row][column];
-                //if CPu finishes a specific ship
+                playerBoard[row][column] = "X";
+                playerBoardShot[row][column] = "X";
 
+                displayCPUBoard();
+                //if CPu finishes a specific ship
                 if (!shipExists(ship,0)) {
                     result = 2;
+                    switch(ship){
+                        case"A":
+                            System.out.println("The Aircraft Carrier has been Struck Down");
+                            break;
+                        case"D":
+                            System.out.println("The Destroyer has been Struck Down");
+                            break;
+                        case"C":
+                            System.out.println("The Cruiser has been Struck Down");
+                            break;
+                        case"B":
+                            System.out.println("The Battleship has been Struck Down");
+                            break;
+                        case"S":
+                            System.out.println("The Submarine has been Struck Down");
+                            break;
+                    }
                 }
                 //when cpu doesn't finish the ship
                 else {
                     result = 1;
                 }
-                playerBoard[row][column] = "X";
-                playerBoardShot[row][column] = "X";
+
             }
         }
         return result;
@@ -310,49 +348,108 @@ public class Battleship {
         //take shot
         result = takeShot(column, row  , 1);
 
-
         return result;
     }
     public static int takeCpuShot(int difficulty){
         //varable setup
         int result =0;
         int row = 0, column =0;
-        boolean canTakeShot = false;
+        boolean canTakeShot = false, validShot = false;
+        int shotDistance =1;
+        int hitOrientation = 0;
+        int hitCounter =0;
 
-        do {
-            //take shot for ai easy difficulty
-            if(difficulty==0){
-                row = (int)(Math.random()*10);
-                column = (int)(Math.random()*10);
-            }
 
-            //check for valid shot
-            if(!(playerBoard[column][row].equals("O"))||!(playerBoard[column][row].equals("X"))){
-                canTakeShot = true;
+        if(difficulty==0) {
+            do {
+                //take shot for ai easy difficulty
+
+                row = (int) (Math.random() * 10);
+                column = (int) (Math.random() * 10);
+
+
+                //check for valid shot
+                if (!(playerBoard[column][row].equals("O")) || !(playerBoard[column][row].equals("X"))) {
+                    canTakeShot = true;
+                } else {
+                    System.out.println("Invalid Shot");
+                }
+
+            } while (!canTakeShot);
+        }
+        else if(difficulty==1){
+            if(hit){
+                //get coordinates of last hit
+                column  = hitX;
+                row = hitY;
+                while(!validShot) {
+                    do {
+                        //search for area around last hit coordinate
+                        hitOrientation = (int) (Math.random() * 4) + 1;
+                        if (hitOrientation == 1) {
+                            row-=shotDistance;
+                        } else if (hitOrientation == 2) {
+                            column+=shotDistance;
+                        } else if (hitOrientation == 3) {
+                            row+=shotDistance;
+                        } else {
+                            column-=shotDistance;
+                        }
+                        hitCounter++;
+                        //upgrade distance changed if enough shots are taken
+                        if(hitCounter>20){
+                            shotDistance++;
+                        }
+                    } while (!(row >= 1 && row <= 10 && column >= 1 && column <= 10));
+                    if (!(playerBoard[row][column]=="X"||playerBoard[row][column]=="-"||playerBoard[row][column]=="O")){
+                        validShot=true;
+                    }
+                }
+
             }
             else{
-                System.out.println("Invalid Shot");
-            }
+                do {
+                    //take shot for ai normal difficulty when ai hasn't found a ship yet
 
-        }while(!canTakeShot);
+                    row = (int) (Math.random() * 10);
+                    column = (int) (Math.random() * 10);
+
+
+                    //check for valid shot
+                    if (!(playerBoard[column][row].equals("O")) || !(playerBoard[column][row].equals("X"))) {
+                        canTakeShot = true;
+                    } else {
+                        System.out.println("Invalid Shot");
+                    }
+
+                } while (!canTakeShot);
+            }
+        }
 
         result = takeShot(column,row,0);
-
+        if(result==1){
+            hit = true;
+            hitX = column;
+            hitY = row;
+        }
+        else if (result==2) {
+            hit=false;
+        }
         return result;
     }
 
     public static boolean shipExists(String ship, int player){
         //variable setup
         boolean exists = false;
-        System.out.println("ship" + ship);
 
-        //for cpu
-        if(player==0){
+        //for player
+        if(player==1){
             //searches for ship of the same type
             for (int i = 0; i < 10; i++) {
                 for (int j= 0; j < 10; j++) {
-                    if(playerBoard[i][j].equals(ship)){
+                    if(cpuBoard[i][j].equals(ship)){
                         exists=true;
+
                         break;
                     }
                 }
@@ -362,13 +459,16 @@ public class Battleship {
             //searches for ship of the same type
             for (int i = 0; i < 10; i++) {
                 for (int j = 0; j < 10; j++) {
-                    if (cpuBoard[i][j].equals(ship)) {
+                    System.out.println(cpuBoard[i][j]);
+                    if (playerBoard[i][j].equals(ship)) {
+                        System.out.println("Ship found");
                         exists = true;
                         break;
                     }
                 }
             }
         }
+        System.out.println(exists);
         return exists;
     }
 
@@ -376,20 +476,30 @@ public class Battleship {
     public static boolean checkWin(int player){
         boolean win = false;
 
-        if (player==1){
+        if (player==0){
             for (int i = 0; i < 10; i++) {
                 for (int j= 0; j < 10; j++) {
                     if(!((cpuBoard[i][j].equals("-"))||cpuBoard[i][j].equals("X")||cpuBoard[i][j].equals("O"))){
+                        //if CPu wins
                         win=true;
+                        displayPlayerBoard();
+                        displayCPUBoard();
+                        System.out.println("You have Lost! Here are the Statuses of the two Boards: ");
+                        System.out.println("Press Enter to continue: ");
                     }
                 }
             }
         }
-        else if (player==0){
+        else if (player==1){
             for (int i = 0; i < 10; i++) {
                 for (int j= 0; j < 10; j++) {
                     if(!((playerBoard[i][j].equals("-"))||playerBoard[i][j].equals("X")||playerBoard[i][j].equals("O"))){
+                        //if player wins
                         win=true;
+                        displayPlayerBoard();
+                        displayCPUBoard();
+                        System.out.println("You Won!!! Here was the Status of both Boards: ");
+                        System.out.println("Press Enter to continue: ");
                     }
                 }
             }
@@ -729,8 +839,5 @@ public class Battleship {
         catch(IOException e){
             System.out.println("error with " + e);
         }
-
     }
-
-
 }
